@@ -9,4 +9,3 @@ const axiosClient = axios.create({
 });
 
 export default axiosClient;
-git remote add origin https://github.com/<your-username>/myportfolio.git

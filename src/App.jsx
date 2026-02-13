@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Projects from "./pages/Projects";
-import Contact from "./pages/Contact"; // ✅ fixed case
+import Contact from "./pages/contact";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
