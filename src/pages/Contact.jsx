@@ -66,51 +66,65 @@ const handleSubmit = async (e) => {
   }
 
   setLoading(true);
-  const spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
+  let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
 
   try {
-    // ---------------- Your existing backend call ----------------
+    // ---------------- Axios POST (backend) ----------------
     await axiosClient.post("contact/", {
       ...form,
       recaptcha_token: recaptchaToken,
     });
 
-    // ---------------- Auto-reply email via EmailJS (first message only) ----------------
+    // ---------------- EmailJS auto-reply (first message only) ----------------
     const firstMessageKey = `firstMessageSent_${form.email}`;
     const alreadySent = localStorage.getItem(firstMessageKey);
 
     if (!alreadySent) {
       try {
-        await emailjs.send(
-          import.meta.env.VITE_EMAILJS_SERVICE_ID,
-          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-          {
-            name: form.name,
-            to_email: form.email,
-            reply_message: `Hi ${form.name},\n\nThanks for reaching out! We’ve received your message and will get back to you shortly.\n\nIn the meantime, you can reach us at +234 708 109 1762.\n\nCheers,\nDavid Marcus`,
-          },
-          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-        );
-        localStorage.setItem(firstMessageKey, "true"); // mark as sent
-        } catch {
-          // silently fail auto-reply
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (serviceId && templateId && publicKey) {
+          await emailjs.send(
+            serviceId,
+            templateId,
+            {
+              name: form.name,
+              to_email: form.email,
+              reply_message: `Hi ${form.name},\n\nThanks for reaching out! We’ve received your message and will get back to you shortly.\n\nCheers,\nDavid Marcus`,
+            },
+            publicKey
+          );
+          localStorage.setItem(firstMessageKey, "true"); // mark as sent
+        } else {
+          console.warn("EmailJS env variables are missing in production.");
         }
+      } catch (emailErr) {
+        console.error("EmailJS send error:", emailErr);
+      }
+    }
 
     // ---------------- Reset form & reCAPTCHA ----------------
     setSuccess(true);
     setForm({ name: "", email: "", phone: "", subject: "", message: "", honeypot: "" });
-    recaptchaRef.current.reset();
+    recaptchaRef.current?.reset();
     setRecaptchaToken(null);
+
     setTimeout(() => setSuccess(false), 4000);
-  } catch (error) {
-    console.error(error);
-    alert(error.response?.data?.error || "Failed to send message. Try again later.");
+
+  } catch (err) {
+    console.error("Contact form error:", err);
+    const msg = err.response?.data?.error || "Failed to send message. Try again later.";
+    alert(msg);
+
   } finally {
-    clearTimeout(spinnerTimeout);
+    if (spinnerTimeout) clearTimeout(spinnerTimeout);
     setLoading(false);
     setShowSpinner(false);
   }
 };
+
 
   return (
     <div className="relative bg-slate-950 min-h-screen text-white overflow-hidden">
