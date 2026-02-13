@@ -52,79 +52,86 @@ export default function Contact() {
     setForm((prev) => ({ ...prev, [name]: value }));
     if (name === "email") setEmailError(false);
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
 
-  if (!isValidEmail(form.email)) {
-    setEmailError(true);
-    return;
-  }
-
-  if (!recaptchaToken) {
-    alert("Please complete the reCAPTCHA to submit the form.");
-    return;
-  }
-
-  setLoading(true);
-  let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
-
-  try {
-    // ---------------- Axios POST (backend) ----------------
-    await axiosClient.post("contact/", {
-      ...form,
-      recaptcha_token: recaptchaToken,
-    });
-
-    // ---------------- EmailJS auto-reply (first message only) ----------------
-    const firstMessageKey = `firstMessageSent_${form.email}`;
+  /* ---------------- Helper: EmailJS send (separate function to avoid nested try/catch) ---------------- */
+  const sendEmailJsIfNeeded = async (formData) => {
+    const firstMessageKey = `firstMessageSent_${formData.email}`;
     const alreadySent = localStorage.getItem(firstMessageKey);
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-    if (!alreadySent) {
-      try {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (serviceId && templateId && publicKey) {
-          await emailjs.send(
-            serviceId,
-            templateId,
-            {
-              name: form.name,
-              to_email: form.email,
-              reply_message: `Hi ${form.name},\n\nThanks for reaching out! We’ve received your message and will get back to you shortly.\n\nCheers,\nDavid Marcus`,
-            },
-            publicKey
-          );
-          localStorage.setItem(firstMessageKey, "true"); // mark as sent
-        } else {
-          console.warn("EmailJS env variables are missing in production.");
-        }
-      } catch (emailErr) {
-        console.error("EmailJS send error:", emailErr);
-      }
+    if (!serviceId || !templateId || !publicKey) {
+      // Env not configured — don't attempt to send, just resolve
+      console.warn("EmailJS env variables are missing in production.");
+      return;
     }
 
-    // ---------------- Reset form & reCAPTCHA ----------------
-    setSuccess(true);
-    setForm({ name: "", email: "", phone: "", subject: "", message: "", honeypot: "" });
-    recaptchaRef.current?.reset();
-    setRecaptchaToken(null);
+    if (alreadySent) return;
 
-    setTimeout(() => setSuccess(false), 4000);
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          name: formData.name,
+          to_email: formData.email,
+          reply_message: `Hi ${formData.name},\n\nThanks for reaching out! We’ve received your message and will get back to you shortly.\n\nCheers,\nDavid Marcus`,
+        },
+        publicKey
+      );
+      localStorage.setItem(firstMessageKey, "true");
+    } catch (emailErr) {
+      // Log and swallow — don't block main flow
+      console.error("EmailJS send error:", emailErr);
+    }
+  };
 
-  } catch (err) {
-    console.error("Contact form error:", err);
-    const msg = err.response?.data?.error || "Failed to send message. Try again later.";
-    alert(msg);
+  /* ---------------- Submission (production-safe: no nested try/catch) ---------------- */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  } finally {
-    if (spinnerTimeout) clearTimeout(spinnerTimeout);
-    setLoading(false);
-    setShowSpinner(false);
-  }
-};
+    if (!isValidEmail(form.email)) {
+      setEmailError(true);
+      return;
+    }
 
+    if (!recaptchaToken) {
+      alert("Please complete the reCAPTCHA to submit the form.");
+      return;
+    }
+
+    setLoading(true);
+    let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
+
+    try {
+      // ---------------- Axios POST (backend) ----------------
+      await axiosClient.post("contact/", {
+        ...form,
+        recaptcha_token: recaptchaToken,
+      });
+
+      // ---------------- EmailJS auto-reply (first message only) ----------------
+      // moved to helper to avoid nested try/catch in the outer try
+      await sendEmailJsIfNeeded(form);
+
+      // ---------------- Reset form & reCAPTCHA ----------------
+      setSuccess(true);
+      setForm({ name: "", email: "", phone: "", subject: "", message: "", honeypot: "" });
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
+
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err) {
+      console.error("Contact form error:", err);
+      const msg = err.response?.data?.error || "Failed to send message. Try again later.";
+      alert(msg);
+    } finally {
+      if (spinnerTimeout) clearTimeout(spinnerTimeout);
+      setLoading(false);
+      setShowSpinner(false);
+    }
+  };
 
   return (
     <div className="relative bg-slate-950 min-h-screen text-white overflow-hidden">
