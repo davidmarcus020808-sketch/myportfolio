@@ -75,17 +75,17 @@ const handleSubmit = async (e) => {
       recaptcha_token: recaptchaToken,
     });
 
-    // ---------------- EmailJS auto-reply (first message only) ----------------
+    // ---------------- EmailJS auto-reply ----------------
     const firstMessageKey = `firstMessageSent_${form.email}`;
     const alreadySent = localStorage.getItem(firstMessageKey);
 
     if (!alreadySent) {
-      try {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-        if (serviceId && templateId && publicKey) {
+      if (serviceId && templateId && publicKey) {
+        try {
           await emailjs.send(
             serviceId,
             templateId,
@@ -97,11 +97,11 @@ const handleSubmit = async (e) => {
             publicKey
           );
           localStorage.setItem(firstMessageKey, "true"); // mark as sent
-        } else {
-          console.warn("EmailJS env variables are missing in production.");
+        } catch (emailErr) {
+          console.error("EmailJS send error:", emailErr);
         }
-      } catch (emailErr) {
-        console.error("EmailJS send error:", emailErr);
+      } else {
+        console.warn("EmailJS env variables are missing in production.");
       }
     }
 
@@ -117,13 +117,13 @@ const handleSubmit = async (e) => {
     console.error("Contact form error:", err);
     const msg = err.response?.data?.error || "Failed to send message. Try again later.";
     alert(msg);
-
   } finally {
     if (spinnerTimeout) clearTimeout(spinnerTimeout);
     setLoading(false);
     setShowSpinner(false);
   }
 };
+
 
 
   return (
