@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/Spinner.jsx";
 import { FiMapPin, FiMail, FiPhone, FiMessageCircle, FiCheckCircle } from "react-icons/fi";
 import axiosClient from "../axiosClient.js";
 import emailjs from "@emailjs/browser"; // <-- EmailJS import
