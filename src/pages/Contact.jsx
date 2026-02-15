@@ -102,7 +102,7 @@ export default function Contact() {
     }
 
     setLoading(true);
-    let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
+    let SpinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
 
     try {
       // ---------------- Axios POST (backend) ----------------
@@ -127,7 +127,7 @@ export default function Contact() {
       const msg = err.response?.data?.error || "Failed to send message. Try again later.";
       alert(msg);
     } finally {
-      if (spinnerTimeout) clearTimeout(spinnerTimeout);
+      if (SpinnerTimeout) clearTimeout(SpinnerTimeout);
       setLoading(false);
       setShowSpinner(false);
     }
