@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import Spinner from "../components/Spinner.jsx";
+import Spinner from "../components/spinner.jsx";
 import { FiMapPin, FiMail, FiPhone, FiMessageCircle, FiCheckCircle } from "react-icons/fi";
 import axiosClient from "../axiosClient.js";
 import emailjs from "@emailjs/browser"; // <-- EmailJS import
@@ -102,7 +102,7 @@ export default function Contact() {
     }
 
     setLoading(true);
-    let SpinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
+    let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
 
     try {
       // ---------------- Axios POST (backend) ----------------
@@ -127,7 +127,7 @@ export default function Contact() {
       const msg = err.response?.data?.error || "Failed to send message. Try again later.";
       alert(msg);
     } finally {
-      if (SpinnerTimeout) clearTimeout(SpinnerTimeout);
+      if (spinnerTimeout) clearTimeout(spinnerTimeout);
       setLoading(false);
       setShowSpinner(false);
     }

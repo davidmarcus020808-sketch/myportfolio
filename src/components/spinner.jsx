@@ -1,3 +1,4 @@
+// src/components/spinner.jsx
 import React from "react";
 import { motion } from "framer-motion";
 
