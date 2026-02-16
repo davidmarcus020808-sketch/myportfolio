@@ -207,13 +207,12 @@ export default function Contact() {
             <textarea name="message" placeholder="Tell me about your goals, timeline, or challenges…" rows={6} value={form.message} onChange={handleChange} required className="input-dark resize-none" />
 
             {/* ---------------- RECAPTCHA ---------------- */}
-            <ReCAPTCHA
-              sitekey="6Lc1i2IsAAAAAHMblgJewKAu_YyIUqNgRSLAfm7k"
-              ref={recaptchaRef}
-              onChange={(token) => {
-                setRecaptchaToken(token);
-              }}
-            />
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                ref={recaptchaRef}
+                onChange={(token) => setRecaptchaToken(token)}
+              />
+
 
             <motion.button
               type="submit"
