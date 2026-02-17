@@ -1,21 +1,30 @@
 // src/axiosClient.js
 import axios from "axios";
 
-// Remove trailing slash if it exists
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api"
-).replace(/\/$/, "");
+// --------------------
+// Use only deployed backend URL
+// --------------------
+// Make sure you set this in Vercel:
+// Key: VITE_API_URL
+// Value: https://dave-bank-backend.onrender.com/api
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error(
+    "VITE_API_URL environment variable is not set! Check Vercel env settings."
+  );
+}
 
 const axiosClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL.replace(/\/$/, ""), // remove trailing slash
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 10000, // 10s timeout
 });
 
-// Optional: Log request URL in development
-if (import.meta.env.DEV) {
+// Optional: Log requests in development preview only
+if (import.meta.env.MODE !== "production") {
   axiosClient.interceptors.request.use((config) => {
     console.log("API Request →", `${config.baseURL}${config.url}`);
     return config;
