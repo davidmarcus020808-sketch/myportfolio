@@ -8,6 +8,8 @@ import axios from "axios";
 // Key: VITE_API_URL
 // Value: https://dave-bank-backend.onrender.com/api
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+console.log("API BASE URL:", API_BASE_URL);
+
 
 if (!API_BASE_URL) {
   throw new Error(
