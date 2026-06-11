@@ -5,7 +5,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Spinner from "../components/spinner.jsx";
-import { FiMapPin, FiMail, FiPhone, FiMessageCircle, FiCheckCircle } from "react-icons/fi";
+import { FiMapPin, FiMail, FiPhone, FiMessageCircle, FiCheckCircle, FiArrowLeft } from "react-icons/fi";
 import axiosClient from "../axiosClient.js";
 import emailjs from "@emailjs/browser"; // <-- EmailJS import
 
@@ -30,21 +30,7 @@ export default function Contact() {
   const [showSpinner, setShowSpinner] = useState(false);
   const [success, setSuccess] = useState(false);
   const [emailError, setEmailError] = useState(false);
-  const [backVisible, setBackVisible] = useState(true);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
-
-  /* ---------------- Scroll-based Back Button ---------------- */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let lastScroll = window.scrollY;
-    const handleScroll = () => {
-      const current = window.scrollY;
-      setBackVisible(current < lastScroll || current < 50);
-      lastScroll = current;
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   /* ---------------- Form Handlers ---------------- */
   const handleChange = (e) => {
@@ -62,7 +48,6 @@ export default function Contact() {
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     if (!serviceId || !templateId || !publicKey) {
-      // Env not configured — don't attempt to send, just resolve
       console.warn("EmailJS env variables are missing in production.");
       return;
     }
@@ -76,13 +61,12 @@ export default function Contact() {
         {
           name: formData.name,
           to_email: formData.email,
-          reply_message: `Hi ${formData.name},\n\nThanks for reaching out! We’ve received your message and will get back to you shortly.\n\nCheers,\nDavid Marcus`,
+          reply_message: `Hi ${formData.name},\n\nThanks for reaching out! We've received your message and will get back to you shortly.\n\nCheers,\nDavid Marcus`,
         },
         publicKey
       );
       localStorage.setItem(firstMessageKey, "true");
     } catch (emailErr) {
-      // Log and swallow — don't block main flow
       console.error("EmailJS send error:", emailErr);
     }
   };
@@ -105,17 +89,13 @@ export default function Contact() {
     let spinnerTimeout = setTimeout(() => setShowSpinner(true), 500);
 
     try {
-      // ---------------- Axios POST (backend) ----------------
       await axiosClient.post("contact/", {
         ...form,
         recaptcha_token: recaptchaToken,
       });
 
-      // ---------------- EmailJS auto-reply (first message only) ----------------
-      // moved to helper to avoid nested try/catch in the outer try
       await sendEmailJsIfNeeded(form);
 
-      // ---------------- Reset form & reCAPTCHA ----------------
       setSuccess(true);
       setForm({ name: "", email: "", phone: "", subject: "", message: "", honeypot: "" });
       recaptchaRef.current?.reset();
@@ -139,47 +119,70 @@ export default function Contact() {
       {showSpinner && <Spinner />}
 
       {/* ================= BACK BUTTON ================= */}
-      <motion.div
-        className="fixed top-2 left-6 z-50 px-4 py-2 rounded-xl backdrop-blur-md shadow-md text-slate-700 font-semibold cursor-pointer"
-        initial={{ y: -40, opacity: 0 }}
-        animate={{ y: backVisible ? 0 : -60, opacity: backVisible ? 1 : 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-      >
+      {/* Sits just below the fixed navbar (top-16 = 64px = navbar height) */}
+      <div className="fixed top-[72px] left-4 sm:left-6 z-40">
         <motion.button
           onClick={() => navigate(-1)}
-          className="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-md shadow-md text-white font-semibold hover:bg-white/30 transition"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut", delay: 0.1 }}
           whileHover={!loading ? { scale: 1.05 } : {}}
           whileTap={!loading ? { scale: 0.95 } : {}}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors shadow-lg"
         >
-          ← Back
+          <FiArrowLeft size={15} />
+          <span>Back</span>
         </motion.button>
-      </motion.div>
+      </div>
 
       {/* ================= HERO ================= */}
-      <motion.section variants={fadeUp} initial="hidden" animate="visible" className="relative pt-36 pb-24 px-6 text-center max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-          Let’s build something{" "}
+      <motion.section
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="relative pt-40 pb-16 px-4 sm:px-6 text-center max-w-3xl mx-auto"
+      >
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+          Let's build something{" "}
           <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">meaningful</span>
         </h1>
-        <p className="mt-5 text-slate-300 text-lg leading-relaxed">
-          Whether it’s a product, redesign, or idea — I help turn concepts into intuitive, scalable digital experiences.
+        <p className="mt-5 text-slate-300 text-base sm:text-lg leading-relaxed px-2">
+          Whether it's a product, redesign, or idea — I help turn concepts into intuitive, scalable digital experiences.
         </p>
         <div className="mt-8 h-[2px] w-16 bg-gradient-to-r from-sky-400 to-blue-500 mx-auto rounded-full" />
       </motion.section>
 
       {/* ================= FORM & INFO ================= */}
-      <motion.section variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative max-w-6xl mx-auto px-6 pb-28 grid md:grid-cols-2 gap-16">
+      <motion.section
+        variants={stagger}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="relative max-w-6xl mx-auto px-4 sm:px-6 pb-28 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16"
+      >
         {/* -------- FORM -------- */}
         <motion.div variants={fadeUp}>
           {success && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-center gap-2 bg-emerald-500/15 text-emerald-300 px-4 py-3 rounded-xl">
-              <FiCheckCircle /> Message sent — I’ll reply shortly
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex items-center gap-2 bg-emerald-500/15 text-emerald-300 px-4 py-3 rounded-xl text-sm"
+            >
+              <FiCheckCircle /> Message sent — I'll reply shortly
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-10 grid gap-6 shadow-2xl">
-            <div className="grid sm:grid-cols-2 gap-6">
-              <input type="text" name="name" placeholder="Your name" value={form.name} onChange={handleChange} required className="input-dark" />
+          <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-10 grid gap-6 shadow-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <input
+                type="text"
+                name="name"
+                placeholder="Your name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                className="input-dark"
+              />
               <div>
                 <input
                   type="email"
@@ -202,31 +205,62 @@ export default function Contact() {
               </div>
             </div>
 
-            <input type="text" name="phone" placeholder="WhatsApp number (optional)" value={form.phone} onChange={handleChange} className="input-dark" />
-            <input type="text" name="subject" placeholder="What’s this about?" value={form.subject} onChange={handleChange} required className="input-dark" />
-            <textarea name="message" placeholder="Tell me about your goals, timeline, or challenges…" rows={6} value={form.message} onChange={handleChange} required className="input-dark resize-none" />
+            <input
+              type="text"
+              name="phone"
+              placeholder="WhatsApp number (optional)"
+              value={form.phone}
+              onChange={handleChange}
+              className="input-dark"
+            />
+            <input
+              type="text"
+              name="subject"
+              placeholder="What's this about?"
+              value={form.subject}
+              onChange={handleChange}
+              required
+              className="input-dark"
+            />
+            <textarea
+              name="message"
+              placeholder="Tell me about your goals, timeline, or challenges…"
+              rows={6}
+              value={form.message}
+              onChange={handleChange}
+              required
+              className="input-dark resize-none"
+            />
 
             {/* ---------------- RECAPTCHA ---------------- */}
+            <div className="overflow-x-auto">
               <ReCAPTCHA
                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                 ref={recaptchaRef}
                 onChange={(token) => setRecaptchaToken(token)}
               />
-
+            </div>
 
             <motion.button
               type="submit"
               disabled={loading || !recaptchaToken}
               whileHover={!loading ? { scale: 1.03 } : {}}
               whileTap={!loading ? { scale: 0.96 } : {}}
-              className={`bg-gradient-to-r from-sky-400 to-blue-500 text-slate-900 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center gap-2 ${loading || !recaptchaToken ? "opacity-60 cursor-not-allowed" : ""}`}
+              className={`bg-gradient-to-r from-sky-400 to-blue-500 text-slate-900 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center gap-2 transition ${
+                loading || !recaptchaToken ? "opacity-60 cursor-not-allowed" : ""
+              }`}
             >
-              {loading && <div className="w-5 h-5 border-2 border-t-2 border-white rounded-full animate-spin"></div>}
+              {loading && <div className="w-5 h-5 border-2 border-t-2 border-slate-900 rounded-full animate-spin" />}
               {loading ? "Sending…" : "Send message"}
             </motion.button>
 
             {form.phone && (
-              <a href={`https://wa.me/${formatPhone(form.phone)}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center justify-center gap-2 bg-emerald-500/90 text-white py-3 rounded-full font-semibold hover:bg-emerald-500 transition">
+              <a
+                href={`https://wa.me/${formatPhone(form.phone)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center justify-center gap-2 bg-emerald-500/90 text-white py-3 rounded-full font-semibold hover:bg-emerald-500 transition"
+              >
                 <FiMessageCircle /> Continue on WhatsApp
               </a>
             )}
@@ -234,10 +268,13 @@ export default function Contact() {
         </motion.div>
 
         {/* -------- CONTACT INFO WITH MAP -------- */}
-        <motion.div variants={fadeUp} className="grid gap-6">
+        <motion.div variants={fadeUp} className="grid gap-6 content-start">
           {/* Location */}
-          <motion.div whileHover={{ y: -4 }} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg">
-            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center">
+          <motion.div
+            whileHover={{ y: -4 }}
+            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
               <FiMapPin />
             </div>
             <div className="flex flex-col">
@@ -259,22 +296,27 @@ export default function Contact() {
           </motion.div>
 
           {/* Email */}
-          <motion.div whileHover={{ y: -4 }} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex items-start gap-4 shadow-lg">
-            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center">
+          <motion.div
+            whileHover={{ y: -4 }}
+            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex items-start gap-4 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
               <FiMail />
             </div>
             <div className="flex flex-col">
               <p className="text-sm text-slate-400">Email</p>
-              <a href="mailto:davidmarcus020808@gmail.com" className="font-semibold text-white hover:underline">
+              <a href="mailto:davidmarcus020808@gmail.com" className="font-semibold text-white hover:underline break-all">
                 davidmarcus020808@gmail.com
               </a>
-
             </div>
           </motion.div>
 
           {/* Phone */}
-          <motion.div whileHover={{ y: -4 }} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex items-start gap-4 shadow-lg">
-            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center">
+          <motion.div
+            whileHover={{ y: -4 }}
+            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex items-start gap-4 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-full bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
               <FiPhone />
             </div>
             <div className="flex flex-col">
@@ -288,8 +330,15 @@ export default function Contact() {
       </motion.section>
 
       {/* ================= WHATSAPP POPUP ================= */}
-      <a href="https://api.whatsapp.com/send/?phone=2347081091762&text=Hi%2C%20I%20found%20your%20website%20and%20would%20like%20to%20discuss%20a%20project.&type=phone_number&app_absent=0" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white px-5 py-4 rounded-full shadow-lg flex items-center gap-3 z-50 transition">
-        <FiMessageCircle size={20} /> Contact via WhatsApp
+      <a
+        href="https://api.whatsapp.com/send/?phone=2347081091762&text=Hi%2C%20I%20found%20your%20website%20and%20would%20like%20to%20discuss%20a%20project.&type=phone_number&app_absent=0"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-4 sm:right-6 bg-green-500 hover:bg-green-600 text-white px-4 sm:px-5 py-3 sm:py-4 rounded-full shadow-lg flex items-center gap-2 sm:gap-3 z-50 transition text-sm sm:text-base"
+      >
+        <FiMessageCircle size={20} />
+        <span className="hidden sm:inline">Contact via WhatsApp</span>
+        <span className="sm:hidden">WhatsApp</span>
       </a>
 
       <Footer />

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+
 import {
   FaGithub,
   FaLinkedin,
@@ -8,12 +9,10 @@ import {
   FaInstagram,
   FaFacebook,
 } from "react-icons/fa";
+
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
 
 const Footer = () => {
-  const [email, setEmail] = useState("");
-
   const links = [
     { name: "Home", path: "/" },
     { name: "Projects", path: "/projects" },
@@ -32,18 +31,12 @@ const Footer = () => {
     { icon: <FaFacebook />, link: "https://web.facebook.com/profile.php?id=100091917469282" },
   ];
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) alert(`Subscribed with: ${email}`);
-    setEmail("");
-  };
-
   // Floating particles
   const particles = Array.from({ length: 15 });
 
   return (
     <footer className="relative bg-gradient-to-t from-slate-900 via-slate-800 to-slate-900 text-slate-200 overflow-hidden pt-12 pb-8">
-      
+
       {/* Animated particles */}
       {particles.map((_, i) => (
         <motion.div
@@ -71,35 +64,37 @@ const Footer = () => {
 
       <div className="relative max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-3 gap-10">
 
-        {/* Branding / Newsletter */}
-        <div className="flex flex-col items-start md:items-start space-y-3">
+        {/* Branding + Availability card */}
+        <div className="flex flex-col items-start space-y-3">
           <h2 className="text-3xl font-bold text-white mb-1">
             David<span className="text-sky-400">.</span>
           </h2>
           <p className="text-sm text-slate-400">
-            Building modern, scalable web applications. Let’s create something awesome together.
+            Building modern, scalable web applications. Let's create something awesome together.
           </p>
 
-          {/* Newsletter */}
-          <form
-            onSubmit={handleSubscribe}
-            className="flex w-full max-w-xs gap-2 mt-2"
-          >
-            <input
-              type="email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="px-3 py-2 rounded-l-md border border-slate-600 bg-slate-800 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 flex-1"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-sky-500 hover:bg-sky-400 px-4 py-2 rounded-r-md font-semibold transition"
+          {/* Availability card */}
+          <div className="mt-2 w-full max-w-xs rounded-2xl border border-sky-500/20 bg-sky-500/5 backdrop-blur-sm p-4 flex flex-col gap-3">
+            {/* Status pill */}
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+              </span>
+              <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">Available for work</span>
+            </div>
+
+            <p className="text-sm text-slate-300 leading-snug">
+              Open to freelance projects, contracts, and full-time roles. Response within 24 hrs.
+            </p>
+
+            <NavLink
+              to="/contact"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-900 font-semibold text-sm transition-colors"
             >
-              Subscribe
-            </button>
-          </form>
+              Let's talk →
+            </NavLink>
+          </div>
         </div>
 
         {/* Quick Links */}
