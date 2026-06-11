@@ -1,12 +1,6 @@
 // src/axiosClient.js
 import axios from "axios";
 
-// --------------------
-// Use only deployed backend URL
-// --------------------
-// Make sure you set this in Vercel:
-// Key: VITE_API_URL
-// Value: https://dave-bank-backend.onrender.com/api
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 console.log("API BASE URL:", API_BASE_URL);
 
@@ -22,7 +16,7 @@ const axiosClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10s timeout
+  timeout: 30000, // 30s timeout
 });
 
 // Optional: Log requests in development preview only
